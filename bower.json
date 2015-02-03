@@ -1,0 +1,27 @@
+{
+  "name": "droppable.js",
+  "version": "0.1.0",
+  "authors": [
+    "Flow Ltd"
+  ],
+  "main": "dist/droppable.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "drag and drop",
+    "sortable"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "demos",
+    "node_modules",
+    "bower_components",
+    "src",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.3"
+  }
+}
