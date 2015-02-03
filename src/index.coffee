@@ -2,20 +2,26 @@ Sortable = require("./sortable")
 Draggable = require("./draggable")
 Droppable = require("./droppable")
 
-$.fn.droppable = (options = {}) ->
-  values = for element in this
-    (new Droppable(element, options))
+factory = ($) ->
+  $.fn.droppable = (options = {}) ->
+    values = for element in this
+      (new Droppable(element, options))
 
-  values
+    values
 
-$.fn.draggable = (options = {}) ->
-  values = for element in this
-    (new Draggable(element, options))
+  $.fn.draggable = (options = {}) ->
+    values = for element in this
+      (new Draggable(element, options))
 
-  values
+    values
 
-$.fn.sortable = (options = {}) ->
-  values = for element in this
-    (new Sortable(element, options))
+  $.fn.sortable = (options = {}) ->
+    values = for element in this
+      (new Sortable(element, options))
 
-  values
+    values
+
+if typeof define == "function" && define.amd
+  define(["jquery"], factory)
+else
+  factory(jQuery)
