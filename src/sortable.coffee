@@ -4,6 +4,7 @@ cursorInsideElement = require "./utilities/cursor_inside_element"
 setDataForEvent = require "./utilities/set_data_for_event"
 dataFromEvent = require "./utilities/data_from_event"
 SortableSession = require "./sortable_session"
+config = require "./utilities/config"
 
 class Sortable extends DragAndDrop
   isBound: false
@@ -11,15 +12,14 @@ class Sortable extends DragAndDrop
   placeholder: null
 
   constructor: (@el, options = {}) ->
-    @_elements = []
-    @$el = $(@el)
+    @_elements = [] # TODO just use the session
+    @$el = $(@el) # TODO redundent when creating a event binding module
     @options = defaults(options, {
-      "skipRender": false
       manual: false
-      "tolerance": 12
-      "items": "[draggable='true']"
-      "direction": "vertical"
-      "placeholder": (e, index) ->
+      tolerance: 12
+      items: "[draggable='true']"
+      direction: "vertical"
+      placeholder: (e, index) ->
         element = document.createElement("li")
         element.className = "placeholder"
         element
@@ -47,10 +47,8 @@ class Sortable extends DragAndDrop
   _dropEvent: (e) ->
     e.preventDefault()
     e.stopPropagation()
-
     return if !@placeholder?.parentNode
-
-    $elements = $ @_elements
+    $elements = $(@_elements)
 
     data = dataFromEvent(e.originalEvent)
     data.originalIndex = {
@@ -58,25 +56,23 @@ class Sortable extends DragAndDrop
       end: $elements.last().index()
     }
 
-    if @options.manual == false
-      if @options.skipRender
-        $elements.remove()
-      else
-        $elements.detach()
+    unless @options.manual
+      $elements.detach()
 
-    $placeholder = $ @placeholder
+    $placeholder = $(@placeholder)
     _index = $placeholder.index()
 
 # If were moving the elements "up", then the placeholder would be above where the
 # elements came from, so we'll need to -1 from the originalIndex indices.
 
-    if (_index < data.originalIndex.start)
+    if _index < data.originalIndex.start
       data.originalIndex.start -= 1
       data.originalIndex.end -= 1
 
     # TODO use a document fragment
-    if !@options.skipRender && !@options.manual
+    unless @options.manual
       $placeholder.after($elements)
+
     $placeholder.detach()
 
     @options.sort?.call(this, _index, data, @_elements)
@@ -86,10 +82,11 @@ class Sortable extends DragAndDrop
 
   _dragendEvent: (e) ->
     # HACK need a better way of getting DnD events to propagate properly
+    # TODO remove, Flow specific behaviour
     $("body").trigger("drag:end", e)
 
     if @_elements.length
-      @options.stop @_elements if @options.stop
+      @options.stop?(@_elements)
       $(@placeholder).detach()
       @placeholder = null
 
@@ -114,12 +111,12 @@ class Sortable extends DragAndDrop
       @placeholder = null
 
     if cursorInsideElement(e.originalEvent, @el)
-      @options.out(e, e.currentTarget, @_typesForEvent(e.originalEvent)) if @options.out
+      @options.out?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
 
   _dragstartEvent: (e) ->
-    $currentTarget = $ e.currentTarget
+    $currentTarget = $(e.currentTarget)
     dataTransfer = e.originalEvent.dataTransfer
-    dataTransfer.effectAllowed = "move" if dataTransfer
+    dataTransfer?.effectAllowed = "move"
 
     @$el.on("dragend", @options.items, $.proxy(this, "_dragendEvent"))
 
@@ -127,7 +124,7 @@ class Sortable extends DragAndDrop
     @_addElementsForEvent(e.originalEvent)
 
     activeSession = new SortableSession(@_elements)
-    config("activeSession", keys)
+    config("activeSession", activeSession)
     context = @options.context?(@_elements, e.currentTarget, dataTransfer) || {}
     context[activeSession.identifier] = true
     setDataForEvent(context, e.originalEvent)
@@ -158,7 +155,6 @@ class Sortable extends DragAndDrop
       }
 
     rect = e.currentTarget.getBoundingClientRect()
-
     return if placeholderIndex == targetIndex
     if placeholderIndex == -1
       if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
@@ -183,7 +179,7 @@ class Sortable extends DragAndDrop
     return if !@_shouldAccept e
     @_boot()
 
-    @options.over(e, e.currentTarget, @_typesForEvent(e.originalEvent)) if @options.over
+    @options.over?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
 
     unless @placeholder
       @placeholder = @options.placeholder(e, @_elements.length)
@@ -192,7 +188,7 @@ class Sortable extends DragAndDrop
     $(e.currentTarget)[keyword](@placeholder)
 
     if config("activeSession")?.valid(e.originalEvent)
-      session = activeSession
+      session = config("activeSession")
 
     @options.insertPlaceholder?(@placeholder, @_elements, session)
     e.stopPropagation()

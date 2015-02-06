@@ -1,3 +1,5 @@
+config = require "./utilities/config"
+
 class SortableSession
   constructor: (@_elements) ->
     @identifier = "#{~~((1+Math.random())*0x10000)}/com.getflow.session"
@@ -8,5 +10,7 @@ class SortableSession
     @rects[0]
 
   valid: (e) ->
-    source = activeDragAndDropTypes || e.dataTransfer.types
+    source = config("activeDragAndDropTypes") || e.dataTransfer.types
     @identifier in source
+
+module.exports = SortableSession

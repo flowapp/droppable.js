@@ -10,8 +10,7 @@ class Droppable extends DragAndDrop
   constructor: (@el, options = {}) ->
     @$el = $(@el)
     @options = defaults(options, {
-      "selector": null
-      "greedy": true
+      selector: null
     })
 
     @enable()
@@ -44,43 +43,45 @@ class Droppable extends DragAndDrop
     return if !@_shouldAccept e
 
     $(e.currentTarget).addClass(@options.hoverClass) if @options.hoverClass
-    @options.over(e, e.currentTarget, @_typesForEvent(e.originalEvent)) if @options.over
+    @options.over?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
 
     return false if @isBound
     @$el.on "drop", @options.selector, $.proxy(this, "_dropEvent")
     @$el.on "dragleave", @options.selector, $.proxy(this, "_dragleave")
     @$el.on "dragover", @options.selector, $.proxy(this, "_dragover")
     @isBound = true
-    false
+    false # TODO manually call stop propagation
 
   _dropEvent: (e) ->
-    @options.drop(e, dataFromEvent(e.originalEvent)) if @options.drop
+    @options.drop?(e, dataFromEvent(e.originalEvent))
     $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
 
-    # HACK!!! Need a better way of getting DnD events to propagate properly
+    # HACK Need a better way of getting DnD events to propagate properly
+    # TODO remove, Flow specific behaviour
     $("body").trigger("drag:end", e)
 
     @_cleanUp()
-
-    return if !@options.drop # Make it progagate if no drop event is spesified
-
+    return true if !@options.drop # Make it progagate if no drop event is specified
     e.stopPropagation()
     false
 
   _dragleave: (e) ->
-    # Hack
+    # HACK some UA fires drag leave too often, we need to make sure it’s
+    # actually outside of the element. There is probably better ways to check
+    # this as it’s covering every case.
     if cursorInsideElement(e.originalEvent, e.currentTarget)
       $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
-      @options.out(e, e.currentTarget, @_typesForEvent(e.originalEvent)) if @options.out
+      @options.out?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
 
     if cursorInsideElement(e.originalEvent, @el)
       @_cleanUp()
 
+    # TODO stop propagation instead of relying on weird jQuery behaviour.
     false
 
   _dragover: (e) ->
-    @options.dragOver(e, e.currentTarget) if @options.dragOver
+    @options.dragOver?(e, e.currentTarget)
     e.preventDefault()
-    true
+    true # TODO just remove it.
 
 module.exports = Droppable

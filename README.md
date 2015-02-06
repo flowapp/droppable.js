@@ -28,9 +28,9 @@ examples will use this build when available.
 To simplify the test setup, we’re using broccoli to build our tests as well,
 simply run `broccoli serve` and `karma start` to run the test suite.
 
-The test suite assumes the user agent implementations works. Down the road, we
-might create implementation tests using selenium, to make sure they work as
-expected as well.
+The test suite assumes the user agent's implementation works. Down the road we
+may create implementation tests using selenium in order to ensure that this is
+the case.
 
 ### Distributing a build
 
