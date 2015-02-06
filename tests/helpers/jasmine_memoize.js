@@ -1,0 +1,1 @@
+require("jasmine-memoize").install()
