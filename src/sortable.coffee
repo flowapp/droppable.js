@@ -30,14 +30,14 @@ class Sortable extends DragAndDrop
 
   enable: ->
     unless @enabled
-      @$el.on "dragstart", @options.items, $.proxy(this, "_dragstartEvent")
-      @$el.on "dragover", @options.items, $.proxy(this, "_dragoverEvent")
+      @$el.on "dragstart", @options.items, $.proxy(this, "_handleDragstart")
+      @$el.on "dragover", @options.items, $.proxy(this, "_handleDragover")
       @enabled = true
 
   disable: ->
     if @enabled
-      @$el.off "dragstart", @options.selector, @_dragStart
-      @$el.off "dragover", @options.items, @_dragoverEvent
+      @$el.off "dragstart", @options.selector, @_handleDragstart
+      @$el.off "dragover", @options.items, @_handleDragover
       @enabled = false
       $(@placeholder).detach() if @placeholder
 
@@ -45,7 +45,7 @@ class Sortable extends DragAndDrop
   # Private
   #
 
-  _dropEvent: (e) ->
+  _handleDrop: (e) ->
     e.preventDefault()
     e.stopPropagation()
     return if !@placeholder?.parentNode
@@ -81,7 +81,7 @@ class Sortable extends DragAndDrop
 
     false
 
-  _dragendEvent: (e) ->
+  _handleDragend: (e) ->
     # HACK need a better way of getting DnD events to propagate properly
     # TODO remove, Flow specific behaviour
     $("body").trigger("drag:end", e)
@@ -96,17 +96,17 @@ class Sortable extends DragAndDrop
 
   _boot: ->
     unless @isBound
-      @$el.on "drop", @options.items, $.proxy(this, "_dropEvent")
-      @$el.on "dragleave", $.proxy(this, "_dragleave")
+      @$el.on "drop", @options.items, $.proxy(this, "_handleDrop")
+      @$el.on "dragleave", $.proxy(this, "_handleDragleave")
       @isBound = true
 
   _cleanUp: ->
-    @$el.off "drop", @options.items, @_dropEvent
-    @$el.off "dragend", @options.items, @_dragendEvent
-    @$el.off "dragleave", @_dragleave
+    @$el.off "drop", @options.items, @_handleDrop
+    @$el.off "dragend", @options.items, @_handleDragend
+    @$el.off "dragleave", @_handleDragleave
     @isBound = false
 
-  _dragleave: (e) ->
+  _handleDragleave: (e) ->
     if cursorInsideElement(e.originalEvent, e.currentTarget)
       $(@placeholder).detach()
       @placeholder = null
@@ -114,12 +114,12 @@ class Sortable extends DragAndDrop
     if cursorInsideElement(e.originalEvent, @el)
       @options.out?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
 
-  _dragstartEvent: (e) ->
+  _handleDragstart: (e) ->
     $currentTarget = $(e.currentTarget)
     dataTransfer = e.originalEvent.dataTransfer
     dataTransfer?.effectAllowed = "move"
 
-    @$el.on("dragend", @options.items, $.proxy(this, "_dragendEvent"))
+    @$el.on("dragend", @options.items, $.proxy(this, "_handleDragend"))
 
     @_elements = [e.currentTarget]
     @_addElementsForEvent(e.originalEvent)
@@ -134,7 +134,7 @@ class Sortable extends DragAndDrop
     @options.start?(@_elements)
     e.stopPropagation()
 
-  _dragoverEvent: (e) ->
+  _handleDragover: (e) ->
     e.preventDefault()
     placeholderIndex = $(@placeholder).index()
     targetIndex = $(e.currentTarget).index()
@@ -184,7 +184,7 @@ class Sortable extends DragAndDrop
 
     unless @placeholder
       @placeholder = @options.placeholder(e, @_elements.length)
-      $(@placeholder).on("drop", $.proxy(this, "_dropEvent"))
+      $(@placeholder).on("drop", $.proxy(this, "_handleDrop"))
     $(@placeholder).detach()
     $(e.currentTarget)[keyword](@placeholder)
 

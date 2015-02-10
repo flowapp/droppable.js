@@ -13,28 +13,28 @@ class Draggable extends DragAndDrop
 
   enable: ->
     unless @enabled
-      @$el.on "dragstart", @options.selector, $.proxy(this, "_dragStart")
+      @$el.on "dragstart", @options.selector, $.proxy(this, "_handleDragstart")
       @enabled = true
 
   disable: ->
     if @enabled
-      @$el.off "dragstart", @options.selector, @_dragStart
+      @$el.off "dragstart", @options.selector, @_handleDragstart
       @enabled = false
 
   #
   # Private
   #
 
-  _dragEvent: (e) ->
+  _handleDrag: (e) ->
     @options.drag?(@_elements, e.originalEvent)
 
-  _dragEndEvent: (e) ->
+  _handleDragend: (e) ->
     @options.stop?(@_elements, e.originalEvent)
 
-    @$el.off "drag", @options.selector, @_dragEvent
-    @$el.off "dragend", @options.selector, @_dragEndEvent
+    @$el.off "drag", @options.selector, @_handleDrag
+    @$el.off "dragend", @options.selector, @_handleDragend
 
-  _dragStart: (e) ->
+  _handleDragstart: (e) ->
     dataTransfer = e.originalEvent.dataTransfer
     dataTransfer?.effectAllowed = "move"
 
@@ -47,8 +47,8 @@ class Draggable extends DragAndDrop
 
     @_setupDragImage(e.originalEvent)
 
-    @$el.on("drag", @options.selector, $.proxy(this, "_dragEvent")) if @options.drag
-    @$el.on("dragend", @options.selector, $.proxy(this, "_dragEndEvent"))
+    @$el.on("drag", @options.selector, $.proxy(this, "_handleDrag")) if @options.drag
+    @$el.on("dragend", @options.selector, $.proxy(this, "_handleDragend"))
 
     @options.start?(@_elements)
 

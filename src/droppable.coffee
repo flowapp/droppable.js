@@ -19,11 +19,11 @@ class Droppable extends DragAndDrop
   enable: ->
     unless @enabled
       @enabled = true
-      @$el.on "dragenter", @options.selector, $.proxy(this, "_dragenter")
+      @$el.on "dragenter", @options.selector, $.proxy(this, "_handleDragenter")
 
   disable: ->
     @_cleanUp()
-    @$el.off "dragenter", @options.selector, @_dragenter
+    @$el.off "dragenter", @options.selector, @_handleDragenter
     @enabled = false
 
   destroy: ->
@@ -34,24 +34,24 @@ class Droppable extends DragAndDrop
   #
 
   _cleanUp: ->
-    @$el.off "drop", @options.selector, @_dropEvent
-    @$el.off "dragleave", @options.selector, @_dragleave
-    @$el.off "dragover", @options.selector, @_dragover
+    @$el.off "drop", @options.selector, @_handleDrop
+    @$el.off "dragleave", @options.selector, @_handleDragleave
+    @$el.off "dragover", @options.selector, @_handleDragover
     @isBound = false
 
-  _dragenter: (e) ->
+  _handleDragenter: (e) ->
     nativeEvent = e.originalEvent || e
     if @_shouldAccept(e)
       e.stopPropagation()
       $(e.currentTarget).addClass(@options.hoverClass) if @options.hoverClass
       @options.over?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
       unless @isBound
-        @$el.on "drop", @options.selector, $.proxy(this, "_dropEvent")
-        @$el.on "dragleave", @options.selector, $.proxy(this, "_dragleave")
-        @$el.on "dragover", @options.selector, $.proxy(this, "_dragover")
+        @$el.on "drop", @options.selector, $.proxy(this, "_handleDrop")
+        @$el.on "dragleave", @options.selector, $.proxy(this, "_handleDragleave")
+        @$el.on "dragover", @options.selector, $.proxy(this, "_handleDragover")
         @isBound = true
 
-  _dropEvent: (e) ->
+  _handleDrop: (e) ->
     if @options.drop
       @options.drop(e, dataFromEvent(e.originalEvent))
       e.stopPropagation()
@@ -66,7 +66,7 @@ class Droppable extends DragAndDrop
     @_cleanUp()
     undefined
 
-  _dragleave: (e) ->
+  _handleDragleave: (e) ->
     # HACK some UA fires drag leave too often, we need to make sure it’s
     # actually outside of the element. There is probably better ways to check
     # this as it’s covering every case.
@@ -80,7 +80,7 @@ class Droppable extends DragAndDrop
     e.stopPropagation()
     e.preventDefault() # Figure out if this is needed
 
-  _dragover: (e) ->
+  _handleDragover: (e) ->
     @options.dragOver?(e, e.currentTarget)
     e.preventDefault()
     undefined
