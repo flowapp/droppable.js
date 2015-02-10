@@ -7,7 +7,7 @@ class Draggable extends DragAndDrop
     @_elements = []
     @$el = $(@el)
     @options = defaults(options, {
-      "selector": null
+      selector: null
     })
     @enable()
 

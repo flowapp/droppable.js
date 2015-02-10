@@ -3,6 +3,7 @@ cursorInsideElement = require "./utilities/cursor_inside_element"
 dataFromEvent = require "./utilities/data_from_event"
 config = require "./utilities/config"
 DragAndDrop = require "./common"
+typesForDataTransfer = require "./utilities/types_for_data_transfer"
 
 class Droppable extends DragAndDrop
   isBound: false
@@ -43,7 +44,7 @@ class Droppable extends DragAndDrop
     return if !@_shouldAccept e
 
     $(e.currentTarget).addClass(@options.hoverClass) if @options.hoverClass
-    @options.over?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
+    @options.over?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
 
     return false if @isBound
     @$el.on "drop", @options.selector, $.proxy(this, "_dropEvent")
@@ -71,7 +72,7 @@ class Droppable extends DragAndDrop
     # this as it’s covering every case.
     if cursorInsideElement(e.originalEvent, e.currentTarget)
       $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
-      @options.out?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
+      @options.out?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
 
     if cursorInsideElement(e.originalEvent, @el)
       @_cleanUp()

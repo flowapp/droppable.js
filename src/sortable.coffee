@@ -5,6 +5,7 @@ setDataForEvent = require "./utilities/set_data_for_event"
 dataFromEvent = require "./utilities/data_from_event"
 SortableSession = require "./sortable_session"
 config = require "./utilities/config"
+typesForDataTransfer = require "./utilities/types_for_data_transfer"
 
 class Sortable extends DragAndDrop
   isBound: false
@@ -111,7 +112,7 @@ class Sortable extends DragAndDrop
       @placeholder = null
 
     if cursorInsideElement(e.originalEvent, @el)
-      @options.out?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
+      @options.out?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
 
   _dragstartEvent: (e) ->
     $currentTarget = $(e.currentTarget)
@@ -179,7 +180,7 @@ class Sortable extends DragAndDrop
     return if !@_shouldAccept e
     @_boot()
 
-    @options.over?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
+    @options.over?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
 
     unless @placeholder
       @placeholder = @options.placeholder(e, @_elements.length)
