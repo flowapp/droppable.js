@@ -48,43 +48,43 @@ class Sortable extends DragAndDrop
   _handleDrop: (e) ->
     e.preventDefault()
     e.stopPropagation()
-    return if !@placeholder?.parentNode
-    $elements = $(@_elements)
+    if @placeholder?.parentNode
+      $elements = $(@_elements)
 
-    data = dataFromEvent(e.originalEvent)
-    data.originalIndex = {
-      start: $elements.first().index()
-      end: $elements.last().index()
-    }
+      data = dataFromEvent(e.originalEvent)
+      data.originalIndex = {
+        start: $elements.first().index()
+        end: $elements.last().index()
+      }
 
-    unless @options.manual
-      $elements.detach()
+      unless @options.manual
+        $elements.detach()
 
-    $placeholder = $(@placeholder)
-    _index = $placeholder.index()
+      $placeholder = $(@placeholder)
+      _index = $placeholder.index()
 
-# If were moving the elements "up", then the placeholder would be above where the
-# elements came from, so we'll need to -1 from the originalIndex indices.
+      # If were moving the elements "up", then the placeholder would be above where the
+      # elements came from, so we'll need to -1 from the originalIndex indices.
 
-    if _index < data.originalIndex.start
-      data.originalIndex.start -= 1
-      data.originalIndex.end -= 1
+      if _index < data.originalIndex.start
+        data.originalIndex.start -= 1
+        data.originalIndex.end -= 1
 
-    # TODO use a document fragment
-    unless @options.manual
-      $placeholder.after($elements)
+      # TODO use a document fragment
+      unless @options.manual
+        $placeholder.after($elements)
 
-    $placeholder.detach()
+      $placeholder.detach()
 
-    @options.sort?.call(this, _index, data, @_elements)
-    @options.stop?.call(this, @_elements)
+      @options.sort?.call(this, _index, data, @_elements)
+      @options.stop?.call(this, @_elements)
 
-    false
+    undefined
 
   _handleDragend: (e) ->
     # HACK need a better way of getting DnD events to propagate properly
     # TODO remove, Flow specific behaviour
-    $("body").trigger("drag:end", e)
+    $(document.body).trigger("drag:end", e)
 
     if @_elements.length
       @options.stop?(@_elements)
@@ -135,49 +135,44 @@ class Sortable extends DragAndDrop
     e.stopPropagation()
 
   _handleDragover: (e) ->
-    e.preventDefault()
-    placeholderIndex = $(@placeholder).index()
-    targetIndex = $(e.currentTarget).index()
+    if @_shouldAccept(e)
+      e.preventDefault()
+      placeholderIndex = $(@placeholder).index()
+      targetIndex = $(e.currentTarget).index()
 
-    x = e.originalEvent.clientX
-    y = e.originalEvent.clientY
+      if e.currentTarget != @placeholder
+        directionals = if @options.direction == "vertical"
+          {
+            before: "top"
+            after: "bottom"
+            clientPosition: e.originalEvent.clientY
+          }
+        else if @options.direction == "horizontal"
+          {
+            before: "left"
+            after: "right"
+            clientPosition: e.originalEvent.clientX
+          }
 
-    directionals = if @options.direction == "vertical"
-      {
-        before: "top"
-        after: "bottom"
-        clientPosition: y
-      }
-    else if @options.direction == "horizontal"
-      {
-        before: "left"
-        after: "right"
-        clientPosition: x
-      }
+        rect = e.currentTarget.getBoundingClientRect()
+        if placeholderIndex == -1
+          if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
+            @_flip(e, "before")
+          else if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
+            @_flip(e, "after")
+          return
 
-    rect = e.currentTarget.getBoundingClientRect()
-    return if placeholderIndex == targetIndex
-    if placeholderIndex == -1
-      if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
-        @_flip(e, "before")
-      else if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
-        @_flip(e, "after")
-      return
+        if placeholderIndex > targetIndex
+          if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
+            @_flip(e, "before")
+        else
+          if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
+            @_flip(e, "after")
 
-    if placeholderIndex > targetIndex
-      if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
-        @_flip(e, "before")
-    else
-      if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
-        @_flip(e, "after")
-
-    return
+    undefined
 
   _flip: (e, keyword) ->
-    return if e.currentTarget == @placeholder
-
     nativeEvent = e.originalEvent || e
-    return if !@_shouldAccept e
     @_boot()
 
     @options.over?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
