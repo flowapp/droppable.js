@@ -41,30 +41,30 @@ class Droppable extends DragAndDrop
 
   _dragenter: (e) ->
     nativeEvent = e.originalEvent || e
-    return if !@_shouldAccept e
-
-    $(e.currentTarget).addClass(@options.hoverClass) if @options.hoverClass
-    @options.over?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
-
-    return false if @isBound
-    @$el.on "drop", @options.selector, $.proxy(this, "_dropEvent")
-    @$el.on "dragleave", @options.selector, $.proxy(this, "_dragleave")
-    @$el.on "dragover", @options.selector, $.proxy(this, "_dragover")
-    @isBound = true
-    false # TODO manually call stop propagation
+    if @_shouldAccept(e)
+      e.stopPropagation()
+      $(e.currentTarget).addClass(@options.hoverClass) if @options.hoverClass
+      @options.over?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
+      unless @isBound
+        @$el.on "drop", @options.selector, $.proxy(this, "_dropEvent")
+        @$el.on "dragleave", @options.selector, $.proxy(this, "_dragleave")
+        @$el.on "dragover", @options.selector, $.proxy(this, "_dragover")
+        @isBound = true
 
   _dropEvent: (e) ->
-    @options.drop?(e, dataFromEvent(e.originalEvent))
+    if @options.drop
+      @options.drop(e, dataFromEvent(e.originalEvent))
+      e.stopPropagation()
+      e.preventDefault()
+
     $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
 
     # HACK Need a better way of getting DnD events to propagate properly
     # TODO remove, Flow specific behaviour
-    $("body").trigger("drag:end", e)
+    $(document.body).trigger("drag:end", e)
 
     @_cleanUp()
-    return true if !@options.drop # Make it progagate if no drop event is specified
-    e.stopPropagation()
-    false
+    undefined
 
   _dragleave: (e) ->
     # HACK some UA fires drag leave too often, we need to make sure it’s
@@ -77,12 +77,12 @@ class Droppable extends DragAndDrop
     if cursorInsideElement(e.originalEvent, @el)
       @_cleanUp()
 
-    # TODO stop propagation instead of relying on weird jQuery behaviour.
-    false
+    e.stopPropagation()
+    e.preventDefault() # Figure out if this is needed
 
   _dragover: (e) ->
     @options.dragOver?(e, e.currentTarget)
     e.preventDefault()
-    true # TODO just remove it.
+    undefined
 
 module.exports = Droppable

@@ -3,7 +3,7 @@ setDataForEvent = require "./utilities/set_data_for_event"
 DragAndDrop = require "./common"
 
 class Draggable extends DragAndDrop
-  constructor: (@el, options) ->
+  constructor: (@el, options = {}) ->
     @_elements = []
     @$el = $(@el)
     @options = defaults(options, {
