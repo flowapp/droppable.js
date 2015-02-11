@@ -115,7 +115,6 @@ class Sortable extends DragAndDrop
       @options.out?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
 
   _handleDragstart: (e) ->
-    $currentTarget = $(e.currentTarget)
     dataTransfer = e.originalEvent.dataTransfer
     dataTransfer?.effectAllowed = "move"
 
@@ -137,10 +136,8 @@ class Sortable extends DragAndDrop
   _handleDragover: (e) ->
     if @_shouldAccept(e)
       e.preventDefault()
-      placeholderIndex = $(@placeholder).index()
-      targetIndex = $(e.currentTarget).index()
-
-      if e.currentTarget != @placeholder
+      currentTarget = e.currentTarget
+      if currentTarget != @placeholder
         directionals = if @options.direction == "vertical"
           {
             before: "top"
@@ -154,18 +151,18 @@ class Sortable extends DragAndDrop
             clientPosition: e.originalEvent.clientX
           }
 
-        rect = e.currentTarget.getBoundingClientRect()
-        if placeholderIndex == -1
+        rect = currentTarget.getBoundingClientRect()
+
+        position = currentTarget.compareDocumentPosition(@placeholder) if @placeholder
+        if !@placeholder || position & Node.DOCUMENT_POSITION_DISCONNECTED
           if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
             @_flip(e, "before")
           else if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
             @_flip(e, "after")
-          return
-
-        if placeholderIndex > targetIndex
+        else if position & Node.DOCUMENT_POSITION_FOLLOWING
           if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
             @_flip(e, "before")
-        else
+        else if position & Node.DOCUMENT_POSITION_PRECEDING
           if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
             @_flip(e, "after")
 
