@@ -180,6 +180,9 @@ class Sortable extends DragAndDrop
     unless @placeholder
       @placeholder = @options.placeholder(e, @_elements.length)
       $(@placeholder).on("drop", $.proxy(this, "_handleDrop"))
+      $(@placeholder).on "dragover", (e) ->
+        e.preventDefault()
+
     $(@placeholder).detach()
     $(e.currentTarget)[keyword](@placeholder)
 
