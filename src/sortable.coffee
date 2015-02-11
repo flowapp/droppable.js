@@ -36,7 +36,7 @@ class Sortable extends DragAndDrop
 
   disable: ->
     if @enabled
-      @$el.off "dragstart", @options.selector, @_handleDragstart
+      @$el.off "dragstart", @options.items, @_handleDragstart
       @$el.off "dragover", @options.items, @_handleDragover
       @enabled = false
       $(@placeholder).detach() if @placeholder
