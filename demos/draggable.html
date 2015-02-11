@@ -26,13 +26,13 @@
     <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="http://localhost:4200/droppable.js"></script>
     <script>
-      new Draggable(document.querySelector("[draggable='true']"), {
+      new droppable.js.Draggable(document.querySelector("[draggable='true']"), {
         context: function() {
           return {testing: "bop"}
         }
       })
 
-      new Droppable(document.querySelector(".droppable"),{
+      new droppable.js.Droppable(document.querySelector(".droppable"),{
         hoverClass: "hover",
         accepts: function() {
           return "testing"
