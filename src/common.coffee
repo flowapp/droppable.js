@@ -9,7 +9,7 @@ class DragAndDrop
     if value = config("activeDragAndDropTypes")
       value
     else
-      Object.keys(e.dataTransfer.types)
+      e.dataTransfer.types[..]
 
   _addElementsForEvent: (e) ->
     if @options.addElements

@@ -1,4 +1,5 @@
-module.exports = (e, element) -> 
+# TODO rename file as this module actually checks the opposite
+module.exports = (e, element) ->
   rect = element.getBoundingClientRect()
   x = e.clientX
   y = e.clientY

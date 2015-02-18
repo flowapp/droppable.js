@@ -19,6 +19,7 @@ class Draggable extends DragAndDrop
   disable: ->
     if @enabled
       @$el.off "dragstart", @options.selector, @_dragStart
+      @enabled = false
 
   #
   # Private
@@ -35,13 +36,13 @@ class Draggable extends DragAndDrop
 
   _dragStart: (e) ->
     dataTransfer = e.originalEvent.dataTransfer
-    dataTransfer.effectAllowed = "move" if dataTransfer
+    dataTransfer?.effectAllowed = "move"
 
     @_elements = [e.currentTarget]
     @_addElementsForEvent e.originalEvent
 
     if @options.context
-      context = @options.context(@_elements, e.currentTarget, e.dataTransfer)
+      context = @options.context(@_elements, e.currentTarget, dataTransfer)
       setDataForEvent(context, e.originalEvent)
 
     @_setupDragImage(e.originalEvent)
