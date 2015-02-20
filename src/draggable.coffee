@@ -1,54 +1,55 @@
-defaults = require "./utilities/defaults"
-setDataForEvent = require "./utilities/set_data_for_event"
 DragAndDrop = require "./common"
 
+defaults = require "./utilities/defaults"
+normalizeEventCallback = require "./utilities/normalize_event_callback"
+setDataForEvent = require "./utilities/set_data_for_event"
+
 class Draggable extends DragAndDrop
-  constructor: (@el, options) ->
+  constructor: (@el, options = {}) ->
     @_elements = []
     @$el = $(@el)
     @options = defaults(options, {
-      "selector": null
+      selector: null
     })
     @enable()
 
   enable: ->
     unless @enabled
-      @$el.on "dragstart", @options.selector, $.proxy(this, "_dragStart")
+      @$el.on "dragstart", @options.selector, $.proxy(this, "_handleDragstart")
       @enabled = true
 
   disable: ->
     if @enabled
-      @$el.off "dragstart", @options.selector, @_dragStart
+      @$el.off "dragstart", @options.selector, @_handleDragstart
       @enabled = false
 
   #
   # Private
   #
 
-  _dragEvent: (e) ->
+  _handleDrag: normalizeEventCallback (e) ->
     @options.drag?(@_elements, e.originalEvent)
 
-  _dragEndEvent: (e) ->
+  _handleDragend: normalizeEventCallback (e) ->
     @options.stop?(@_elements, e.originalEvent)
 
-    @$el.off "drag", @options.selector, @_dragEvent
-    @$el.off "dragend", @options.selector, @_dragEndEvent
+    @$el.off "drag", @options.selector, @_handleDrag
+    @$el.off "dragend", @options.selector, @_handleDragend
 
-  _dragStart: (e) ->
-    dataTransfer = e.originalEvent.dataTransfer
+  _handleDragstart: normalizeEventCallback (e, dataTransfer) ->
     dataTransfer?.effectAllowed = "move"
 
     @_elements = [e.currentTarget]
-    @_addElementsForEvent e.originalEvent
+    @_addElementsForEvent(e, dataTransfer)
 
     if @options.context
       context = @options.context(@_elements, e.currentTarget, dataTransfer)
-      setDataForEvent(context, e.originalEvent)
+      setDataForEvent(context, dataTransfer)
 
-    @_setupDragImage(e.originalEvent)
+    @_setupDragImage(e, dataTransfer)
 
-    @$el.on("drag", @options.selector, $.proxy(this, "_dragEvent")) if @options.drag
-    @$el.on("dragend", @options.selector, $.proxy(this, "_dragEndEvent"))
+    @$el.on("drag", @options.selector, $.proxy(this, "_handleDrag")) if @options.drag
+    @$el.on("dragend", @options.selector, $.proxy(this, "_handleDragend"))
 
     @options.start?(@_elements)
 

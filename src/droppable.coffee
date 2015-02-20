@@ -1,8 +1,11 @@
-defaults = require "./utilities/defaults"
+DragAndDrop = require "./common"
+
+config = require "./utilities/config"
 cursorInsideElement = require "./utilities/cursor_inside_element"
 dataFromEvent = require "./utilities/data_from_event"
-config = require "./utilities/config"
-DragAndDrop = require "./common"
+defaults = require "./utilities/defaults"
+normalizeEventCallback = require "./utilities/normalize_event_callback"
+typesForDataTransfer = require "./utilities/types_for_data_transfer"
 
 class Droppable extends DragAndDrop
   isBound: false
@@ -18,11 +21,11 @@ class Droppable extends DragAndDrop
   enable: ->
     unless @enabled
       @enabled = true
-      @$el.on "dragenter", @options.selector, $.proxy(this, "_dragenter")
+      @$el.on "dragenter", @options.selector, $.proxy(this, "_handleDragenter")
 
   disable: ->
     @_cleanUp()
-    @$el.off "dragenter", @options.selector, @_dragenter
+    @$el.off "dragenter", @options.selector, @_handleDragenter
     @enabled = false
 
   destroy: ->
@@ -33,55 +36,53 @@ class Droppable extends DragAndDrop
   #
 
   _cleanUp: ->
-    @$el.off "drop", @options.selector, @_dropEvent
-    @$el.off "dragleave", @options.selector, @_dragleave
-    @$el.off "dragover", @options.selector, @_dragover
+    @$el.off "drop", @options.selector, @_handleDrop
+    @$el.off "dragleave", @options.selector, @_handleDragleave
+    @$el.off "dragover", @options.selector, @_handleDragover
     @isBound = false
 
-  _dragenter: (e) ->
-    nativeEvent = e.originalEvent || e
-    return if !@_shouldAccept e
+  _handleDragenter: normalizeEventCallback (e, dataTransfer) ->
+    if @_shouldAccept(e, dataTransfer)
+      e.stopPropagation()
+      $(e.currentTarget).addClass(@options.hoverClass) if @options.hoverClass
+      @options.over?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
+      unless @isBound
+        @$el.on "drop", @options.selector, $.proxy(this, "_handleDrop")
+        @$el.on "dragleave", @options.selector, $.proxy(this, "_handleDragleave")
+        @$el.on "dragover", @options.selector, $.proxy(this, "_handleDragover")
+        @isBound = true
 
-    $(e.currentTarget).addClass(@options.hoverClass) if @options.hoverClass
-    @options.over?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
+  _handleDrop: normalizeEventCallback (e, dataTransfer) ->
+    if @options.drop
+      @options.drop(e, dataFromEvent(dataTransfer))
+      e.stopPropagation()
+      e.preventDefault()
 
-    return false if @isBound
-    @$el.on "drop", @options.selector, $.proxy(this, "_dropEvent")
-    @$el.on "dragleave", @options.selector, $.proxy(this, "_dragleave")
-    @$el.on "dragover", @options.selector, $.proxy(this, "_dragover")
-    @isBound = true
-    false # TODO manually call stop propagation
-
-  _dropEvent: (e) ->
-    @options.drop?(e, dataFromEvent(e.originalEvent))
     $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
 
     # HACK Need a better way of getting DnD events to propagate properly
     # TODO remove, Flow specific behaviour
-    $("body").trigger("drag:end", e)
+    $(document.body).trigger("drag:end", e)
 
     @_cleanUp()
-    return true if !@options.drop # Make it progagate if no drop event is specified
-    e.stopPropagation()
-    false
 
-  _dragleave: (e) ->
+  _handleDragleave: normalizeEventCallback (e, dataTransfer) ->
     # HACK some UA fires drag leave too often, we need to make sure it’s
     # actually outside of the element. There is probably better ways to check
     # this as it’s covering every case.
+    console.log("e: ", e.originalEvent.clientX, e)
     if cursorInsideElement(e.originalEvent, e.currentTarget)
       $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
-      @options.out?(e, e.currentTarget, @_typesForEvent(e.originalEvent))
+      @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
 
     if cursorInsideElement(e.originalEvent, @el)
       @_cleanUp()
 
-    # TODO stop propagation instead of relying on weird jQuery behaviour.
-    false
+    e.stopPropagation()
+    e.preventDefault() # Figure out if this is needed
 
-  _dragover: (e) ->
+  _handleDragover: normalizeEventCallback (e) ->
     @options.dragOver?(e, e.currentTarget)
     e.preventDefault()
-    true # TODO just remove it.
 
 module.exports = Droppable

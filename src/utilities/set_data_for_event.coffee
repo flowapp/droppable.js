@@ -1,12 +1,12 @@
 isString = require "./is_string"
 config = require "./config"
 
-module.exports = (context, e) ->
+module.exports = (context, dataTransfer) ->
   keys = []
 
   supportsCustomTypes = try
-    e.dataTransfer.setData("test/com.metalabdesign.dnd", "success")
-    e.dataTransfer.clearData("test/com.metalabdesign.dnd")
+    dataTransfer.setData("test/com.getflow.dnd", "success")
+    dataTransfer.clearData("test/com.getflow.dnd")
     true
   catch error
     false
@@ -14,7 +14,7 @@ module.exports = (context, e) ->
   if supportsCustomTypes
     for key, value of context
       value = if isString(value) then value else JSON.stringify(value)
-      e.dataTransfer.setData(key, value)
+      dataTransfer.setData(key, value)
   else
     keys = for key, value of context
       key
@@ -22,6 +22,6 @@ module.exports = (context, e) ->
     config("activeDragAndDropTypes", keys)
 
     if URL = context.URL
-      e.dataTransfer.setData "URL", URL
+      dataTransfer.setData "URL", URL
 
-    e.dataTransfer.setData "Text", JSON.stringify(context)
+    dataTransfer.setData "Text", JSON.stringify(context)
