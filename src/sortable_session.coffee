@@ -9,8 +9,8 @@ class SortableSession
   size: ->
     @rects[0]
 
-  valid: (e) ->
-    source = config("activeDragAndDropTypes") || e.dataTransfer.types
+  valid: (dataTransfer) ->
+    source = config("activeDragAndDropTypes") || dataTransfer.types
     @identifier in source
 
 module.exports = SortableSession

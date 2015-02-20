@@ -5,13 +5,13 @@ typesForDataTransfer = require "./utilities/types_for_data_transfer"
 class DragAndDrop
   iconAndSize: null
 
-  _addElementsForEvent: (e) ->
+  _addElementsForEvent: (e, dataTransfer) ->
     if @options.addElements
-      @_elements = @options.addElements e, e.dataTransfer, @_elements[0]
+      @_elements = @options.addElements(e, dataTransfer, @_elements[0])
 
-  _shouldAccept: (e) ->
+  _shouldAccept: (e, dataTransfer) ->
     if @options.accepts
-      types = typesForDataTransfer(e.originalEvent.dataTransfer)
+      types = typesForDataTransfer(dataTransfer)
       value = @options.accepts(types, e)
       if isString(value)
         value in types
@@ -20,10 +20,9 @@ class DragAndDrop
     else
       true
 
-  _setupDragImage: (e) ->
+  _setupDragImage: (e, dataTransfer) ->
     if @options.iconAndSize
-      dataTransfer = e.dataTransfer
       @iconAndSize = @options.iconAndSize(@_elements, dataTransfer, e)
-      setDragImage(e, @iconAndSize)
+      setDragImage(dataTransfer, @iconAndSize)
 
 module.exports = DragAndDrop

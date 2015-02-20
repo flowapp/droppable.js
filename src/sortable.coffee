@@ -1,11 +1,13 @@
 DragAndDrop = require("./common")
-defaults = require "./utilities/defaults"
-cursorInsideElement = require "./utilities/cursor_inside_element"
-setDataForEvent = require "./utilities/set_data_for_event"
-dataFromEvent = require "./utilities/data_from_event"
 SortableSession = require "./sortable_session"
+
 config = require "./utilities/config"
+cursorInsideElement = require "./utilities/cursor_inside_element"
+dataFromEvent = require "./utilities/data_from_event"
+defaults = require "./utilities/defaults"
+setDataForEvent = require "./utilities/set_data_for_event"
 typesForDataTransfer = require "./utilities/types_for_data_transfer"
+normalizeEventCallback = require "./utilities/normalize_event_callback"
 
 class Sortable extends DragAndDrop
   isBound: false
@@ -45,13 +47,13 @@ class Sortable extends DragAndDrop
   # Private
   #
 
-  _handleDrop: (e) ->
+  _handleDrop: normalizeEventCallback (e, dataTransfer) ->
     e.preventDefault()
     e.stopPropagation()
     if @placeholder?.parentNode
       $elements = $(@_elements)
 
-      data = dataFromEvent(e.originalEvent)
+      data = dataFromEvent(dataTransfer)
       data.originalIndex = {
         start: $elements.first().index()
         end: $elements.last().index()
@@ -79,9 +81,7 @@ class Sortable extends DragAndDrop
       @options.sort?.call(this, _index, data, @_elements)
       @options.stop?.call(this, @_elements)
 
-    undefined
-
-  _handleDragend: (e) ->
+  _handleDragend: normalizeEventCallback (e) ->
     # HACK need a better way of getting DnD events to propagate properly
     # TODO remove, Flow specific behaviour
     $(document.body).trigger("drag:end", e)
@@ -106,35 +106,34 @@ class Sortable extends DragAndDrop
     @$el.off "dragleave", @_handleDragleave
     @isBound = false
 
-  _handleDragleave: (e) ->
+  _handleDragleave: normalizeEventCallback (e, dataTransfer) ->
     if cursorInsideElement(e.originalEvent, e.currentTarget)
       $(@placeholder).detach()
       @placeholder = null
 
     if cursorInsideElement(e.originalEvent, @el)
-      @options.out?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
+      @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
 
-  _handleDragstart: (e) ->
-    dataTransfer = e.originalEvent.dataTransfer
+  _handleDragstart: normalizeEventCallback (e, dataTransfer) ->
     dataTransfer?.effectAllowed = "move"
 
     @$el.on("dragend", @options.items, $.proxy(this, "_handleDragend"))
 
     @_elements = [e.currentTarget]
-    @_addElementsForEvent(e.originalEvent)
+    @_addElementsForEvent(e, dataTransfer)
 
     activeSession = new SortableSession(@_elements)
     config("activeSession", activeSession)
     context = @options.context?(@_elements, e.currentTarget, dataTransfer) || {}
     context[activeSession.identifier] = true
-    setDataForEvent(context, e.originalEvent)
+    setDataForEvent(context, dataTransfer)
 
-    @_setupDragImage(e.originalEvent)
+    @_setupDragImage(e, dataTransfer)
     @options.start?(@_elements)
     e.stopPropagation()
 
-  _handleDragover: (e) ->
-    if @_shouldAccept(e)
+  _handleDragover: normalizeEventCallback (e, dataTransfer) ->
+    if @_shouldAccept(e, dataTransfer)
       e.preventDefault()
       currentTarget = e.currentTarget
       if currentTarget != @placeholder
@@ -156,34 +155,32 @@ class Sortable extends DragAndDrop
         position = currentTarget.compareDocumentPosition(@placeholder) if @placeholder
         if !@placeholder || position & Node.DOCUMENT_POSITION_DISCONNECTED
           if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
-            @_flip(e, "before")
+            @_flip(e, dataTransfer, "before")
           else if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
-            @_flip(e, "after")
+            @_flip(e, dataTransfer, "after")
         else if position & Node.DOCUMENT_POSITION_FOLLOWING
           if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
-            @_flip(e, "before")
+            @_flip(e, dataTransfer, "before")
         else if position & Node.DOCUMENT_POSITION_PRECEDING
           if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
-            @_flip(e, "after")
+            @_flip(e, dataTransfer, "after")
 
-    undefined
-
-  _flip: (e, keyword) ->
-    nativeEvent = e.originalEvent || e
+  _flip: (e, dataTransfer, keyword) ->
     @_boot()
 
-    @options.over?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
+    @options.over?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
 
-    unless @placeholder
+    if !@placeholder
       @placeholder = @options.placeholder(e, @_elements.length)
       $(@placeholder).on("drop", $.proxy(this, "_handleDrop"))
       $(@placeholder).on "dragover", (e) ->
         e.preventDefault()
+    else
+      $(@placeholder).detach()
 
-    $(@placeholder).detach()
     $(e.currentTarget)[keyword](@placeholder)
 
-    if config("activeSession")?.valid(e.originalEvent)
+    if config("activeSession")?.valid(dataTransfer)
       session = config("activeSession")
 
     @options.insertPlaceholder?(@placeholder, @_elements, session)

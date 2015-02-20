@@ -1,8 +1,10 @@
-defaults = require "./utilities/defaults"
+DragAndDrop = require "./common"
+
+config = require "./utilities/config"
 cursorInsideElement = require "./utilities/cursor_inside_element"
 dataFromEvent = require "./utilities/data_from_event"
-config = require "./utilities/config"
-DragAndDrop = require "./common"
+defaults = require "./utilities/defaults"
+normalizeEventCallback = require "./utilities/normalize_event_callback"
 typesForDataTransfer = require "./utilities/types_for_data_transfer"
 
 class Droppable extends DragAndDrop
@@ -39,21 +41,20 @@ class Droppable extends DragAndDrop
     @$el.off "dragover", @options.selector, @_handleDragover
     @isBound = false
 
-  _handleDragenter: (e) ->
-    nativeEvent = e.originalEvent || e
-    if @_shouldAccept(e)
+  _handleDragenter: normalizeEventCallback (e, dataTransfer) ->
+    if @_shouldAccept(e, dataTransfer)
       e.stopPropagation()
       $(e.currentTarget).addClass(@options.hoverClass) if @options.hoverClass
-      @options.over?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
+      @options.over?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
       unless @isBound
         @$el.on "drop", @options.selector, $.proxy(this, "_handleDrop")
         @$el.on "dragleave", @options.selector, $.proxy(this, "_handleDragleave")
         @$el.on "dragover", @options.selector, $.proxy(this, "_handleDragover")
         @isBound = true
 
-  _handleDrop: (e) ->
+  _handleDrop: normalizeEventCallback (e, dataTransfer) ->
     if @options.drop
-      @options.drop(e, dataFromEvent(e.originalEvent))
+      @options.drop(e, dataFromEvent(dataTransfer))
       e.stopPropagation()
       e.preventDefault()
 
@@ -64,15 +65,15 @@ class Droppable extends DragAndDrop
     $(document.body).trigger("drag:end", e)
 
     @_cleanUp()
-    undefined
 
-  _handleDragleave: (e) ->
+  _handleDragleave: normalizeEventCallback (e, dataTransfer) ->
     # HACK some UA fires drag leave too often, we need to make sure it’s
     # actually outside of the element. There is probably better ways to check
     # this as it’s covering every case.
+    console.log("e: ", e.originalEvent.clientX, e)
     if cursorInsideElement(e.originalEvent, e.currentTarget)
       $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
-      @options.out?(e, e.currentTarget, typesForDataTransfer(e.originalEvent.dataTransfer))
+      @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
 
     if cursorInsideElement(e.originalEvent, @el)
       @_cleanUp()
@@ -80,9 +81,8 @@ class Droppable extends DragAndDrop
     e.stopPropagation()
     e.preventDefault() # Figure out if this is needed
 
-  _handleDragover: (e) ->
+  _handleDragover: normalizeEventCallback (e) ->
     @options.dragOver?(e, e.currentTarget)
     e.preventDefault()
-    undefined
 
 module.exports = Droppable

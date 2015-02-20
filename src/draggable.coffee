@@ -1,6 +1,8 @@
-defaults = require "./utilities/defaults"
-setDataForEvent = require "./utilities/set_data_for_event"
 DragAndDrop = require "./common"
+
+defaults = require "./utilities/defaults"
+normalizeEventCallback = require "./utilities/normalize_event_callback"
+setDataForEvent = require "./utilities/set_data_for_event"
 
 class Draggable extends DragAndDrop
   constructor: (@el, options = {}) ->
@@ -25,27 +27,26 @@ class Draggable extends DragAndDrop
   # Private
   #
 
-  _handleDrag: (e) ->
+  _handleDrag: normalizeEventCallback (e) ->
     @options.drag?(@_elements, e.originalEvent)
 
-  _handleDragend: (e) ->
+  _handleDragend: normalizeEventCallback (e) ->
     @options.stop?(@_elements, e.originalEvent)
 
     @$el.off "drag", @options.selector, @_handleDrag
     @$el.off "dragend", @options.selector, @_handleDragend
 
-  _handleDragstart: (e) ->
-    dataTransfer = e.originalEvent.dataTransfer
+  _handleDragstart: normalizeEventCallback (e, dataTransfer) ->
     dataTransfer?.effectAllowed = "move"
 
     @_elements = [e.currentTarget]
-    @_addElementsForEvent e.originalEvent
+    @_addElementsForEvent(e, dataTransfer)
 
     if @options.context
       context = @options.context(@_elements, e.currentTarget, dataTransfer)
-      setDataForEvent(context, e.originalEvent)
+      setDataForEvent(context, dataTransfer)
 
-    @_setupDragImage(e.originalEvent)
+    @_setupDragImage(e, dataTransfer)
 
     @$el.on("drag", @options.selector, $.proxy(this, "_handleDrag")) if @options.drag
     @$el.on("dragend", @options.selector, $.proxy(this, "_handleDragend"))
