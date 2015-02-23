@@ -1,4 +1,4 @@
-module.exports = (dataTransfer, iconAndSize) ->
+module.exports = (e, dataTransfer, iconAndSize) ->
   image = iconAndSize[0]
   if image instanceof Image && !image.complete
     # Early exit; not loaded image will not work and more importantly it craches Safari 6
