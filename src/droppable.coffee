@@ -70,7 +70,6 @@ class Droppable extends DragAndDrop
     # HACK some UA fires drag leave too often, we need to make sure it’s
     # actually outside of the element. There is probably better ways to check
     # this as it’s covering every case.
-    console.log("e: ", e.originalEvent.clientX, e)
     if cursorInsideElement(e.originalEvent, e.currentTarget)
       $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
       @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
