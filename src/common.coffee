@@ -23,6 +23,6 @@ class DragAndDrop
   _setupDragImage: (e, dataTransfer) ->
     if @options.iconAndSize
       @iconAndSize = @options.iconAndSize(@_elements, dataTransfer, e)
-      setDragImage(dataTransfer, @iconAndSize)
+      setDragImage(e, dataTransfer, @iconAndSize)
 
 module.exports = DragAndDrop
