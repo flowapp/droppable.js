@@ -65,6 +65,12 @@ class Sortable extends DragAndDrop
       $placeholder = $(@placeholder)
       _index = $placeholder.index()
 
+      # If @options.manual is true we didn't detach original elements,
+      # so placeholder will be off by elements.length when being dragged
+      # "down" beneath the elements.
+      if @options.manual && _index > data.originalIndex.start
+        _index -= $elements.length
+
       # If were moving the elements "up", then the placeholder would be above where the
       # elements came from, so we'll need to -1 from the originalIndex indices.
 
