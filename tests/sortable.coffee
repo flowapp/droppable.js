@@ -199,3 +199,11 @@ describe "Sortable", ->
       set "options", -> {manual: true}
       it "keeps dropped target at original index", ->
         expect(@el.children[0]).toEqual(@startTarget)
+
+      set "options", -> {manual: true, sort: jasmine.createSpy("sort")}
+      it "subtracts dropped targets from index calculation", ->
+        expect(@options.sort).toHaveBeenCalledWith(
+          2
+          jasmine.any(Object)
+          [@startTarget]
+        )
