@@ -91,26 +91,6 @@ describe "Droppable", ->
         dispatchDragEvent(@el, "drop")
         expect(@options.drop).not.toHaveBeenCalled()
 
-    describe "not legit `dragleave`", ->
-      beforeEach ->
-        dispatchDragEvent(@el, "dragenter")
-        {@defaultPrevented} = dispatchDragEvent(@el, "dragleave", {
-          clientX: 300
-          clientY: 300
-          screenX: 300
-          screenY: 300
-        })
-
-      it "doesn’t call `options.out` if it’s still over it", ->
-        expect(@options.out).not.toHaveBeenCalled()
-
-      it "prevents default", ->
-        expect(@defaultPrevented).toBeTruthy()
-
-      it "keeps going on", ->
-        dispatchDragEvent(@el, "drop")
-        expect(@options.drop).toHaveBeenCalled()
-
   describe "`options.drop`", ->
     set "options", -> {drop: jasmine.createSpy("drop")}
     beforeEach ->
