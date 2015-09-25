@@ -1,6 +1,7 @@
 DragAndDrop = require "./common"
 
 config = require "./utilities/config"
+cursorInsideElement = require "./utilities/cursor_inside_element"
 dataFromEvent = require "./utilities/data_from_event"
 defaults = require "./utilities/defaults"
 normalizeEventCallback = require "./utilities/normalize_event_callback"
@@ -44,7 +45,6 @@ class Droppable extends DragAndDrop
   _handleDragenter: normalizeEventCallback (e, dataTransfer) ->
     if @_shouldAccept(e, dataTransfer)
       e.stopPropagation()
-      @_cleanUp()
       $(e.currentTarget).addClass(@options.hoverClass) if @options.hoverClass
       @options.over?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
       unless @isBound
@@ -74,12 +74,18 @@ class Droppable extends DragAndDrop
     @_cleanUp()
 
   _handleDragleave: normalizeEventCallback (e, dataTransfer) ->
-    if window.getComputedStyle(e.target)["pointer-events"] != "none"
+    # HACK some UA fires drag leave too often, we need to make sure it’s
+    # actually outside of the element. There is probably better ways to check
+    # this as it’s covering every case.
+    if cursorInsideElement(e.originalEvent, e.currentTarget)
       $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
       @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
+
+    if cursorInsideElement(e.originalEvent, @el)
       @_cleanUp()
-      e.stopPropagation()
-      e.preventDefault()
+
+    e.stopPropagation()
+    e.preventDefault() # Figure out if this is needed
 
   _handleDragover: normalizeEventCallback (e) ->
     @options.dragOver?(e, e.currentTarget)
