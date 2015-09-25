@@ -37,6 +37,7 @@ class Droppable extends DragAndDrop
   _cleanUp: ->
     @$el.off "drop", @options.selector, @_handleDrop
     @$el.off "dragleave", @options.selector, @_handleDragleave
+    $(window).off "mouseout", @_handleWindowMouseout
     @$el.off "dragover", @options.selector, @_handleDragover
     @isBound = false
 
@@ -49,6 +50,7 @@ class Droppable extends DragAndDrop
       unless @isBound
         @$el.on "drop", @options.selector, $.proxy(this, "_handleDrop")
         @$el.on "dragleave", @options.selector, $.proxy(this, "_handleDragleave")
+        $(window).on "mouseout", $.proxy(this, "_handleWindowMouseout")
         @$el.on "dragover", @options.selector, $.proxy(this, "_handleDragover")
         @isBound = true
 
@@ -64,6 +66,11 @@ class Droppable extends DragAndDrop
     # TODO remove, Flow specific behaviour
     $(document.body).trigger("drag:end", e)
 
+    @_cleanUp()
+
+  _handleWindowMouseout: normalizeEventCallback (e, dataTransfer) ->
+    $(@el).removeClass(@options.hoverClass) if @options.hoverClass
+    @options.out?(e, @el, typesForDataTransfer(dataTransfer))
     @_cleanUp()
 
   _handleDragleave: normalizeEventCallback (e, dataTransfer) ->
