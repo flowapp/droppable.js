@@ -67,11 +67,12 @@ class Droppable extends DragAndDrop
     @_cleanUp()
 
   _handleDragleave: normalizeEventCallback (e, dataTransfer) ->
-    $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
-    @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
-    @_cleanUp()
-    e.stopPropagation()
-    e.preventDefault()
+    if window.getComputedStyle(e.target)["pointer-events"] != "none"
+      $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
+      @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
+      @_cleanUp()
+      e.stopPropagation()
+      e.preventDefault()
 
   _handleDragover: normalizeEventCallback (e) ->
     @options.dragOver?(e, e.currentTarget)
