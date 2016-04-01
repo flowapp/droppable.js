@@ -69,9 +69,15 @@ class Droppable extends DragAndDrop
     @_cleanUp()
 
   _handleWindowMouseout: normalizeEventCallback (e, dataTransfer) ->
+    # TODO: This will bubble up and happen any time the mouse leaves any element
     $(@el).removeClass(@options.hoverClass) if @options.hoverClass
     @options.out?(e, @el, typesForDataTransfer(dataTransfer))
-    @_cleanUp()
+
+    # HACK: Maximized Chrome on Windows triggers a mouseout right before drop
+    #       so deferring the cleanup slightly allows the drop to be captured
+    setTimeout( =>
+      @_cleanUp()
+    ,  50)
 
   _handleDragleave: normalizeEventCallback (e, dataTransfer) ->
     # HACK some UA fires drag leave too often, we need to make sure it’s
