@@ -9,7 +9,7 @@ module.exports = (e, dataTransfer, iconAndSize) ->
       # Chrome hack; position the drag element where the UA are suppose to position it.
       # This since UA's requires it to be in the DOM and Chrome requires it to be in view…
       iconAndSize[0] = image = image.cloneNode true
-      image.style.position = "absolute"
+      image.style.position = "fixed"
       image.style.left = "#{e.clientX - iconAndSize[1]}px"
       image.style.top = "#{e.clientY - iconAndSize[2]}px"
       document.body.appendChild image
