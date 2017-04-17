@@ -63,6 +63,7 @@ class Sortable extends DragAndDrop
         $elements.detach()
 
       $placeholder = $(@placeholder)
+      _droppedElement = $placeholder.parent()[0]
       _index = $placeholder.index()
 
       # If @options.manual is true we didn't detach original elements,
@@ -85,7 +86,7 @@ class Sortable extends DragAndDrop
 
       $placeholder.detach()
 
-      @options.sort?.call(this, _index, data, @_elements)
+      @options.sort?.call(this, _index, data, @_elements, _droppedElement)
       @options.stop?.call(this, @_elements)
 
   _handleDragend: normalizeEventCallback (e) ->
