@@ -51,6 +51,6 @@ class Draggable extends DragAndDrop
     @$el.on("drag", @options.selector, $.proxy(this, "_handleDrag")) if @options.drag
     @$el.on("dragend", @options.selector, $.proxy(this, "_handleDragend"))
 
-    @options.start?(@_elements)
+    @options.start?(@_elements, e)
 
 module.exports = Draggable
