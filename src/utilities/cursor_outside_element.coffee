@@ -1,4 +1,4 @@
-module.exports = (e, element) ->
+module.exports = (e, element, options = {}) ->
   rect = element.getBoundingClientRect()
   x = e.clientX
   y = e.clientY
@@ -7,4 +7,18 @@ module.exports = (e, element) ->
   left = Math.floor(rect.left)
   right = Math.floor(rect.right)
 
-  (x < left || x >= right || y < top || y >= bottom)
+  if (x < left || x >= right || y < top || y >= bottom)
+    # Cursor is outside of element
+    return true
+  else
+    # Otherwise check if cursor is on a part of the element that is scrolled out of view - if so, consider the cursor to be outside of element.
+    scrollableParent = element.closest("[data-scrollable='true']")
+    if scrollableParent
+      parentRect = scrollableParent.getBoundingClientRect()
+      parentTop = Math.floor(parentRect.top)
+      parentBottom = Math.floor(parentRect.bottom)
+      parentLeft = Math.floor(parentRect.left)
+      parentRight = Math.floor(parentRect.right)
+      return (x <= parentLeft || x >= parentRight || y <= parentTop || y >= parentBottom)
+    else
+      return false
