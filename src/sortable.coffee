@@ -2,7 +2,7 @@ DragAndDrop = require("./common")
 SortableSession = require "./sortable_session"
 
 config = require "./utilities/config"
-cursorInsideElement = require "./utilities/cursor_inside_element"
+cursorOutsideElement = require "./utilities/cursor_outside_element"
 dataFromEvent = require "./utilities/data_from_event"
 defaults = require "./utilities/defaults"
 setDataForEvent = require "./utilities/set_data_for_event"
@@ -115,11 +115,11 @@ class Sortable extends DragAndDrop
     @isBound = false
 
   _handleDragleave: normalizeEventCallback (e, dataTransfer) ->
-    if cursorInsideElement(e.originalEvent, e.currentTarget)
+    if cursorOutsideElement(e.originalEvent, e.currentTarget)
       $(@placeholder).detach()
       @placeholder = null
 
-    if cursorInsideElement(e.originalEvent, @el)
+    if cursorOutsideElement(e.originalEvent, @el)
       @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
 
   _handleDragstart: normalizeEventCallback (e, dataTransfer) ->

@@ -1,7 +1,7 @@
 DragAndDrop = require "./common"
 
 config = require "./utilities/config"
-cursorInsideElement = require "./utilities/cursor_inside_element"
+cursorOutsideElement = require "./utilities/cursor_outside_element"
 dataFromEvent = require "./utilities/data_from_event"
 defaults = require "./utilities/defaults"
 normalizeEventCallback = require "./utilities/normalize_event_callback"
@@ -77,11 +77,11 @@ class Droppable extends DragAndDrop
     # HACK some UA fires drag leave too often, we need to make sure it’s
     # actually outside of the element. There is probably better ways to check
     # this as it’s covering every case.
-    if cursorInsideElement(e.originalEvent, e.currentTarget)
+    if cursorOutsideElement(e.originalEvent, e.currentTarget)
       $(e.currentTarget).removeClass(@options.hoverClass) if @options.hoverClass
       @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
 
-    if cursorInsideElement(e.originalEvent, @el)
+    if cursorOutsideElement(e.originalEvent, @el)
       @_cleanUp()
 
     e.stopPropagation()
