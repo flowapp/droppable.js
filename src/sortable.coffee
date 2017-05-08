@@ -72,6 +72,7 @@ class Sortable extends DragAndDrop
       if @options.manual && _index > data.originalIndex.start
         for element in $elements when @el.contains(element)
           _index -= 1
+          _indexAdjusted = true
 
       # If were moving the elements "up", then the placeholder would be above where the
       # elements came from, so we'll need to -1 from the originalIndex indices.
@@ -86,7 +87,7 @@ class Sortable extends DragAndDrop
 
       $placeholder.detach()
 
-      @options.sort?.call(this, _index, data, @_elements, _droppedElement)
+      @options.sort?.call(this, _index, data, @_elements, _droppedElement, _indexAdjusted)
       @options.stop?.call(this, @_elements)
 
   _handleDragend: normalizeEventCallback (e) ->
