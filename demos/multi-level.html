@@ -1,0 +1,162 @@
+<html>
+  <head>
+    <title>Draggable demo</title>
+    <style>
+      .column {
+        width: 250px;
+      }
+
+      .columns {
+        display: flex;
+      }
+
+      .column {
+        margin: 0 10px;
+        display: flex;
+        flex-direction: column;
+        max-height: 90%;
+        flex-shrink: 0;
+      }
+
+      .sortable-items {
+        overflow-y: auto;
+        flex-shrink: 1;
+      }
+
+      .sortable-item .inner, .placeholder {
+        background: #eee;
+        border: 1px solid #aaa;
+        text-indent: 10px;
+        margin: 10px;
+        height: 40px;
+        line-height: 40px;
+        display: block;
+      }
+
+      .placeholder {
+        background: #efefef;
+        border: 1px dashed #ccc;
+      }
+
+      .columns > .placeholder {
+        width: 350px;
+        margin: 0 10px;
+      }
+
+      .draggable {
+        width: 50px;
+        height: 50px;
+        background: red;
+      }
+
+      header, footer {
+        height: 40px;
+        background: grey;
+        line-height: 40px;
+        padding: 0 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="columns">
+      <div class="column sortable" draggable="true">
+        <header>Header</header>
+        <div class="sortable-items">
+          <div class="sortable-item" draggable="true">
+            <div class="inner">1</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">2</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">3</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">4</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">5</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">6</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">7</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">8</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">9</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">10</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">11</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">12</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">13</div>
+          </div>
+        </div>
+        <footer>Footer</footer>
+      </div>
+
+      <div class="column sortable" draggable="true">
+        <header>Header</header>
+        <div class="sortable-items">
+          <div class="sortable-item" draggable="true">
+            <div class="inner">14</div>
+          </div>
+          <div class="sortable-item" draggable="true">
+            <div class="inner">15</div>
+          </div>
+        </div>
+        <footer>Footer</footer>
+      </div>
+    </div>
+
+
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="http://localhost:4200/droppable.js"></script>
+    <script>
+
+      $(".column.sortable").each(function (index, el) {
+        new droppable.js.Sortable(el,{
+          itemSelector: ".sortable-item",
+          manual: false,
+          context: function() {
+            return {testing: "bop"}
+          },
+          accepts: function() {
+            return "testing"
+          },
+          sort: function(e, value) {
+            console.log("drop!", arguments)
+          }
+        })
+      } )
+
+      $(".columns").each(function (index, el) {
+        new droppable.js.Sortable(el, {
+          itemSelector: ".column",
+          manual: false,
+          direction: "horizontal",
+          context: function() {
+            return {column: "bop"}
+          },
+          accepts: function() {
+            return "column"
+          },
+          sort: function(e, value) {
+            console.log("drop column!", arguments)
+          }
+        })
+      } )
+
+    </script>
+  </body>
+</html>
