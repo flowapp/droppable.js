@@ -6,7 +6,7 @@
         width: 350px;
       }
 
-      .sortable-item, .placeholder {
+      .sortable-item .inner, .placeholder {
         background: #eee;
         border: 1px solid #aaa;
         text-indent: 10px;
@@ -27,15 +27,35 @@
         background: red;
       }
 
+      header, footer {
+        height: 40px;
+        background: grey;
+        line-height: 40px;
+        padding: 0 1em;
+      }
     </style>
   </head>
   <body>
     <div class="sortable">
-      <div class="sortable-item" draggable="true">1</div>
-      <div class="sortable-item" draggable="true">2</div>
-      <div class="sortable-item" draggable="true">3</div>
-      <div class="sortable-item" draggable="true">4</div>
-      <div class="sortable-item" draggable="true">5</div>
+      <header>Header</header>
+      <div class="sortable-items">
+        <div class="sortable-item" draggable="true">
+          <div class="inner">1</div>
+        </div>
+        <div class="sortable-item" draggable="true">
+          <div class="inner">2</div>
+        </div>
+        <div class="sortable-item" draggable="true">
+          <div class="inner">3</div>
+        </div>
+        <div class="sortable-item" draggable="true">
+          <div class="inner">4</div>
+        </div>
+        <div class="sortable-item" draggable="true">
+          <div class="inner">5</div>
+        </div>
+      </div>
+      <footer>Footer</footer>
     </div>
 
     <div class="draggable" draggable="true"></div>
@@ -50,7 +70,7 @@
       })
 
       new droppable.js.Sortable(document.querySelector(".sortable"),{
-        items: ".sortable-item, .placeholders",
+        items: ".sortable-item",
         manual: false,
         context: function() {
           return {testing: "bop"}
