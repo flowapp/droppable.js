@@ -17,6 +17,11 @@ class Sortable extends DragAndDrop
   constructor: (@el, options = {}) ->
     @_elements = [] # TODO just use the session
     @$el = $(@el) # TODO redundent when creating a event binding module
+
+    if options.items
+      options.itemSelector = options.items
+      console.warn("Sortable's `items` option is now `itemSelector`, but it will still work for now")
+
     @options = defaults(options, {
       manual: false
       tolerance: 12
@@ -32,14 +37,14 @@ class Sortable extends DragAndDrop
 
   enable: ->
     unless @enabled
-      @$el.on "dragstart", @options.items, $.proxy(this, "_handleDragstart")
-      @$el.on "dragover", @options.items, $.proxy(this, "_handleDragover")
+      @$el.on "dragstart", @options.itemSelector, $.proxy(this, "_handleDragstart")
+      @$el.on "dragover", @options.itemSelector, $.proxy(this, "_handleDragover")
       @enabled = true
 
   disable: ->
     if @enabled
-      @$el.off "dragstart", @options.items, @_handleDragstart
-      @$el.off "dragover", @options.items, @_handleDragover
+      @$el.off "dragstart", @options.itemSelector, @_handleDragstart
+      @$el.off "dragover", @options.itemSelector, @_handleDragover
       @enabled = false
       $(@placeholder).detach() if @placeholder
 
@@ -105,13 +110,13 @@ class Sortable extends DragAndDrop
 
   _boot: ->
     unless @isBound
-      @$el.on "drop", @options.items, $.proxy(this, "_handleDrop")
+      @$el.on "drop", @options.itemSelector, $.proxy(this, "_handleDrop")
       @$el.on "dragleave", $.proxy(this, "_handleDragleave")
       @isBound = true
 
   _cleanUp: ->
-    @$el.off "drop", @options.items, @_handleDrop
-    @$el.off "dragend", @options.items, @_handleDragend
+    @$el.off "drop", @options.itemSelector, @_handleDrop
+    @$el.off "dragend", @options.itemSelector, @_handleDragend
     @$el.off "dragleave", @_handleDragleave
     @isBound = false
 
@@ -126,7 +131,7 @@ class Sortable extends DragAndDrop
   _handleDragstart: normalizeEventCallback (e, dataTransfer) ->
     dataTransfer?.effectAllowed = "move"
 
-    @$el.on("dragend", @options.items, $.proxy(this, "_handleDragend"))
+    @$el.on("dragend", @options.itemSelector, $.proxy(this, "_handleDragend"))
 
     @_elements = [e.currentTarget]
     @_addElementsForEvent(e, dataTransfer)
