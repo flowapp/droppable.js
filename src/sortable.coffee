@@ -25,7 +25,7 @@ class Sortable extends DragAndDrop
     @options = defaults(options, {
       manual: false
       tolerance: 12
-      items: "[draggable='true']"
+      itemSelector: "[draggable='true']"
       direction: "vertical"
       placeholder: (e, index) ->
         element = document.createElement("li")
@@ -38,13 +38,13 @@ class Sortable extends DragAndDrop
   enable: ->
     unless @enabled
       @$el.on "dragstart", @options.itemSelector, $.proxy(this, "_handleDragstart")
-      @$el.on "dragover", @options.itemSelector, $.proxy(this, "_handleDragover")
+      @$el.on "dragover", $.proxy(this, "_handleDragover")
       @enabled = true
 
   disable: ->
     if @enabled
       @$el.off "dragstart", @options.itemSelector, @_handleDragstart
-      @$el.off "dragover", @options.itemSelector, @_handleDragover
+      @$el.off "dragover", @_handleDragover
       @enabled = false
       $(@placeholder).detach() if @placeholder
 
@@ -110,13 +110,13 @@ class Sortable extends DragAndDrop
 
   _boot: ->
     unless @isBound
-      @$el.on "drop", @options.itemSelector, $.proxy(this, "_handleDrop")
+      @$el.on "drop", $.proxy(this, "_handleDrop")
       @$el.on "dragleave", $.proxy(this, "_handleDragleave")
       @isBound = true
 
   _cleanUp: ->
-    @$el.off "drop", @options.itemSelector, @_handleDrop
-    @$el.off "dragend", @options.itemSelector, @_handleDragend
+    @$el.off "drop", @_handleDrop
+    @$el.off "dragend", @_handleDragend
     @$el.off "dragleave", @_handleDragleave
     @isBound = false
 
@@ -129,11 +129,15 @@ class Sortable extends DragAndDrop
       @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
 
   _handleDragstart: normalizeEventCallback (e, dataTransfer) ->
+    draggedElement = e.target
+
+    return if !draggedElement
+
     dataTransfer?.effectAllowed = "move"
 
-    @$el.on("dragend", @options.itemSelector, $.proxy(this, "_handleDragend"))
+    @$el.on("dragend", $.proxy(this, "_handleDragend"))
+    @_elements = [draggedElement]
 
-    @_elements = [e.currentTarget]
     @_addElementsForEvent(e, dataTransfer)
 
     activeSession = new SortableSession(@_elements)
@@ -149,8 +153,17 @@ class Sortable extends DragAndDrop
   _handleDragover: normalizeEventCallback (e, dataTransfer) ->
     if @_shouldAccept(e, dataTransfer)
       e.preventDefault()
-      currentTarget = e.currentTarget
-      if currentTarget != @placeholder
+
+      eventTarget = e.target
+
+      # This is awkward but it is important to bind the event to the root el
+      # without any selector filtering so you can drop on a header or a footer
+      if @_elementMatchesItemSelector(eventTarget)
+        draggedOver = eventTarget
+      else if element = @_parentOfElementThatMatchesItemSelector(eventTarget)
+        draggedOver = element
+
+      if draggedOver && draggedOver != @placeholder
         directionals = if @options.direction == "vertical"
           {
             before: "top"
@@ -164,40 +177,51 @@ class Sortable extends DragAndDrop
             clientPosition: e.originalEvent.clientX
           }
 
-        rect = currentTarget.getBoundingClientRect()
+        rect = draggedOver.getBoundingClientRect()
 
-        position = currentTarget.compareDocumentPosition(@placeholder) if @placeholder
+        position = draggedOver.compareDocumentPosition(@placeholder) if @placeholder
         if !@placeholder || position & Node.DOCUMENT_POSITION_DISCONNECTED
           if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
-            @_flip(e, dataTransfer, "before")
+            @_flip(event, draggedOver, dataTransfer, "before")
           else if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
-            @_flip(e, dataTransfer, "after")
+            @_flip(event, draggedOver, dataTransfer, "after")
         else if position & Node.DOCUMENT_POSITION_FOLLOWING
           if (rect[directionals.before] - directionals.clientPosition + @options.tolerance) >= 0
-            @_flip(e, dataTransfer, "before")
+            @_flip(event, draggedOver, dataTransfer, "before")
         else if position & Node.DOCUMENT_POSITION_PRECEDING
           if (rect[directionals.after] - directionals.clientPosition - @options.tolerance) <= 0
-            @_flip(e, dataTransfer, "after")
+            @_flip(event, draggedOver, dataTransfer, "after")
 
-  _flip: (e, dataTransfer, keyword) ->
+  _flip: (event, element, dataTransfer, keyword, options = {}) ->
     @_boot()
 
-    @options.over?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
+    @options.over?(event, element, typesForDataTransfer(dataTransfer))
 
     if !@placeholder
-      @placeholder = @options.placeholder(e, @_elements.length)
+      @placeholder = @options.placeholder(event, @_elements.length)
       $(@placeholder).on("drop", $.proxy(this, "_handleDrop"))
       $(@placeholder).on "dragover", (e) ->
-        e.preventDefault()
+        event.preventDefault()
     else
       $(@placeholder).detach()
 
-    $(e.currentTarget)[keyword](@placeholder)
+    $(element)[keyword](@placeholder)
 
     if config("activeSession")?.valid(dataTransfer)
       session = config("activeSession")
 
     @options.insertPlaceholder?(@placeholder, @_elements, session)
-    e.stopPropagation()
+    event.stopPropagation()
+
+  _elementMatchesItemSelector: (element) ->
+    !!$(element).filter(@options.itemSelector).length
+
+  _parentOfElementThatMatchesItemSelector: (element) ->
+    contender = $(element).closest(@options.itemSelector)[0]
+
+    if contender != @el && @el.contains(contender)
+      return contender
+    else
+      return null
 
 module.exports = Sortable
