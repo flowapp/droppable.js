@@ -70,7 +70,7 @@
       })
 
       new droppable.js.Sortable(document.querySelector(".sortable"),{
-        items: ".sortable-item",
+        itemSelector: ".sortable-item",
         manual: false,
         context: function() {
           return {testing: "bop"}
