@@ -129,7 +129,11 @@ class Sortable extends DragAndDrop
       @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
 
   _handleDragstart: normalizeEventCallback (e, dataTransfer) ->
-    draggedElement = e.target
+    # Certain elements within the target elements can actually trigger a drag - like links with HREF attributes
+    if @_elementMatchesItemSelector(e.target)
+      draggedElement = e.target
+    else if element = @_parentOfElementThatMatchesItemSelector(e.target)
+      draggedElement = element
 
     return if !draggedElement
 
