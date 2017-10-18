@@ -38,13 +38,13 @@ class Sortable extends DragAndDrop
   enable: ->
     unless @enabled
       @$el.on "dragstart", @options.itemSelector, $.proxy(this, "_handleDragstart")
-      @$el.on "dragover", $.proxy(this, "_handleDragover")
+      @$el.on "dragover", @options.itemSelector, $.proxy(this, "_handleDragover")
       @enabled = true
 
   disable: ->
     if @enabled
       @$el.off "dragstart", @options.itemSelector, @_handleDragstart
-      @$el.off "dragover", @_handleDragover
+      @$el.off "dragover", @options.itemSelector, @_handleDragover
       @enabled = false
       $(@placeholder).detach() if @placeholder
 
