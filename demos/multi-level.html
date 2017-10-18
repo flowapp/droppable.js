@@ -108,6 +108,14 @@
       <div class="column sortable" draggable="true">
         <header>Header</header>
         <div class="sortable-items">
+
+        </div>
+        <footer>Footer</footer>
+      </div>
+
+      <div class="column sortable" draggable="true">
+        <header>Header</header>
+        <div class="sortable-items">
           <div class="sortable-item" draggable="true">
             <div class="inner">14</div>
           </div>
@@ -129,10 +137,11 @@
           itemSelector: ".sortable-item",
           manual: false,
           context: function() {
-            return {testing: "bop"}
+            return {inner: "bop"}
           },
-          accepts: function() {
-            return "testing"
+          accepts: function(types, e) {
+            e.stopPropagation();
+            return "inner";
           },
           sort: function(e, value) {
             console.log("drop!", arguments)
@@ -146,10 +155,10 @@
           manual: false,
           direction: "horizontal",
           context: function() {
-            return {column: "bop"}
+            return {outer: "bop"}
           },
-          accepts: function() {
-            return "column"
+          accepts: function(types, e) {
+            return "outer"
           },
           sort: function(e, value) {
             console.log("drop column!", arguments)
