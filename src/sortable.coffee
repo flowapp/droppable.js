@@ -52,9 +52,9 @@ class Sortable extends DragAndDrop
   # Private
   #
 
-  _handleDrop: normalizeEventCallback (e, dataTransfer) ->
-    e.preventDefault()
-    e.stopPropagation()
+  _handleDrop: normalizeEventCallback (event, dataTransfer) ->
+    event.preventDefault()
+    event.stopPropagation()
     if @placeholder?.parentNode
       $elements = $(@_elements)
 
@@ -120,19 +120,19 @@ class Sortable extends DragAndDrop
     @$el.off "dragleave", @_handleDragleave
     @isBound = false
 
-  _handleDragleave: normalizeEventCallback (e, dataTransfer) ->
-    if cursorInsideElement(e.originalEvent, e.currentTarget)
+  _handleDragleave: normalizeEventCallback (event, dataTransfer) ->
+    if cursorInsideElement(event.originalEvent, event.currentTarget)
       $(@placeholder).detach()
       @placeholder = null
 
-    if cursorInsideElement(e.originalEvent, @el)
-      @options.out?(e, e.currentTarget, typesForDataTransfer(dataTransfer))
+    if cursorInsideElement(event.originalEvent, @el)
+      @options.out?(event, event.currentTarget, typesForDataTransfer(dataTransfer))
 
-  _handleDragstart: normalizeEventCallback (e, dataTransfer) ->
+  _handleDragstart: normalizeEventCallback (event, dataTransfer) ->
     # Certain elements within the target elements can actually trigger a drag - like links with HREF attributes
-    if @_elementMatchesItemSelector(e.target)
-      draggedElement = e.target
-    else if element = @_parentOfElementThatMatchesItemSelector(e.target)
+    if @_elementMatchesItemSelector(event.target)
+      draggedElement = event.target
+    else if element = @_parentOfElementThatMatchesItemSelector(event.target)
       draggedElement = element
 
     return if !draggedElement
@@ -142,23 +142,23 @@ class Sortable extends DragAndDrop
     @$el.on("dragend", $.proxy(this, "_handleDragend"))
     @_elements = [draggedElement]
 
-    @_addElementsForEvent(e, dataTransfer)
+    @_addElementsForEvent(event, dataTransfer)
 
     activeSession = new SortableSession(@_elements)
     config("activeSession", activeSession)
-    context = @options.context?(@_elements, e.currentTarget, dataTransfer) || {}
+    context = @options.context?(@_elements, event.currentTarget, dataTransfer) || {}
     context[activeSession.identifier] = true
     setDataForEvent(context, dataTransfer)
 
-    @_setupDragImage(e, dataTransfer)
+    @_setupDragImage(event, dataTransfer)
     @options.start?(@_elements)
-    e.stopPropagation()
+    event.stopPropagation()
 
-  _handleDragover: normalizeEventCallback (e, dataTransfer) ->
-    if @_shouldAccept(e, dataTransfer)
-      e.preventDefault()
+  _handleDragover: normalizeEventCallback (event, dataTransfer) ->
+    if @_shouldAccept(event, dataTransfer)
+      event.preventDefault()
 
-      eventTarget = e.target
+      eventTarget = event.target
 
       # This is awkward but it is important to bind the event to the root el
       # without any selector filtering so you can drop on a header or a footer
@@ -172,13 +172,13 @@ class Sortable extends DragAndDrop
           {
             before: "top"
             after: "bottom"
-            clientPosition: e.originalEvent.clientY
+            clientPosition: event.originalEvent.clientY
           }
         else if @options.direction == "horizontal"
           {
             before: "left"
             after: "right"
-            clientPosition: e.originalEvent.clientX
+            clientPosition: event.originalEvent.clientX
           }
 
         rect = draggedOver.getBoundingClientRect()
